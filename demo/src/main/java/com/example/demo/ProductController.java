@@ -3,6 +3,7 @@ package com.example.demo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -18,16 +19,16 @@ public class ProductController {
     private ProductService productService;
 
     @PostMapping
-    public  ResponseEntity<Product> createProduct(@Valid @RequestBody Product product,  BindingResult bindingResult) {
+    public  ResponseEntity<?> createProduct(@Valid @RequestBody Product product,  BindingResult bindingResult) {
         System.out.println("Received product: " + product);
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = new HashMap<>();
-            bindingResult.getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage()));
-            return ResponseEntity.badRequest().body((Product) errors);
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
+            return ResponseEntity.badRequest().body(errors);
         }
         return ResponseEntity.ok(productService.saveProduct(product));
-       // return productService.saveProduct(product);
     }
 
     @GetMapping("/{id}")
